@@ -1,8 +1,6 @@
 // Stem High Altitude Balloon Project 2017
 // Modified for Stem High Altitude Balloon 2018 by Joshua Grebler
 
-#include "Adafruit_GPS.h"
-
 #include <math.h> 
 // Temperature 
 // resistance at 25 degrees C
