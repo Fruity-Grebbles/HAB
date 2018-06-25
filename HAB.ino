@@ -1,1 +1,3 @@
-#include "Adafruit_GPS.h"
+void setup() {}
+
+void loop() {}
