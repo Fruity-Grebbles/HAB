@@ -1,92 +1,5 @@
 // Stem High Altitude Balloon Project 2017
-
-// SD CARD READ/WRITER
-//		CLK --> PIN 13
-//		DO --> 12
-//		DI --> 11
-//		CS --> 10 (Main Pin)
-// PIN 11: MIC IN
-// PIN 9: SPEAKER OUT
-// PIN 8: LED
-// IC2 MAGNETOMETER (3.3V) ADDRESS: 0x1E
-// I2C C02 DETECT ADDRESS: 0X15
-// ACCELEROMETER/GYRO
-//  A1: X-AXIS
-//  A2: Y-AXIS
-//  A3: Z-AXIS
-
-// SDA --> A4
-// SCL --> A5
-
-// Main Arduino Pin 13 --> SD Arduino Pin 7
-// Main Arduino Pin 12 --> SD Arduino Pin 8
-
-
-#include <Wire.h>
-#include <Serial.h>
-
-
-#include "RTClib.h"
-#ifdef __AVR__
- #include <avr/pgmspace.h>
-#elif defined(ESP8266)
- #include <pgmspace.h>
-#elif defined(ARDUINO_ARCH_SAMD)
-
-#elif defined(ARDUINO_SAM_DUE)
- #define PROGMEM
- #define pgm_read_byte(addr) (*(const unsigned char *)(addr))
- #define Wire Wire1
-#endif
-
-/*
-//#include <SPI.h>
-*/
-
-bool isDebug = 0;
-/*
-void initSerial() {
-	Serial.begin(9600);
-	while(!Serial);
-}
-
-void initI2C() {
-	Wire.begin();
-}
-*/
-// Debug Mode will print out more specific details to the serial console
-bool SET_DEBUG(bool debug) {
-	isDebug = debug;
-}
-
-void printDebug(String str) {
-	if (isDebug)
-		Serial.println("DEBUG: " + str);
-}
-
-/*
-// LED Utility Functions Start
-#define LED_PIN 8 // (Using PWM Pin)
-void startLED() {
-	pinMode(LED_PIN,OUTPUT);
-}
-void setLED(bool val) {
-	digitalWrite(LED_PIN,val?HIGH:LOW);
-}
-void flashLED() {
-	// Time: Milliseconds
-	for(unsigned int i = 0; i < 1000; i+=60) {
-		setLED(true);
-		delay(30);
-		setLED(false);
-		delay(30);
-	}
-	setLED(false);
-}
-// LED Utility Functions End
-
-*/
-
+// Modified for Stem High Altitude Balloon 2018 by Joshua Grebler
 
 // TEmperature 
 
@@ -119,23 +32,10 @@ float getTemp( float rawTemp, float Vin ) {
 	return steinhart;
 }
 
-float getRawTemp(int ThermistorPin) {
-	return analogRead(ThermistorPin);
-}
-
 // Return Temp in Farenheit 
 float getTempF( float tempC ) {
 
 	return ( tempC * 1.8 + 32 ); 
-}
-
-
-#define pressurePin A3
-// The sensor pressure is connected to A3 vout
-//Create an instance of the object
-int getRawPressure() {
-	// Return a value from 0-1024 
-	return analogRead( pressurePin );
 }
 
 // The sensor Honeywell SSC 1.6BAAA3 (Analog 3.3v)
@@ -146,7 +46,6 @@ int getRawPressure() {
 // the 1.8 * 2 was because the resistor divider to drop the voltage to 1.8 and the reading from the p9-39 return 
 // value from 0-1.
 float getPressure( int rawValue ) {
-	
 	float pressure = ((rawValue * 0.0049 -.33)/1.65)*100;
 	return pressure;
 }
