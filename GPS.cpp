@@ -1,4 +1,6 @@
 #include <Adafruit_GPS.h>
+#include <string.h>
+#include "./GPS.h"
 
 class myGPS {
   private:

@@ -1,8 +1,6 @@
-#ifndef GPS
-#define GPS
+class GPS{
+  public:
+    GPS::GPS(int, int);
+    String getGpsData();
+};
 
-
-// myGPS test(10,11);
-String  getGpsData();
-
-#endif
