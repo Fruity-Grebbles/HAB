@@ -62,14 +62,3 @@ String myGPS::getGpsData() {
 static void myGPS::handler() {
   char c = GPS->read();
 }
-
-//#include <iostream>
-//#include "GPS.h"
-//
-//StemClass::StemClass(){
-//    Serial.println("Contructor");
-//}
-//
-//void StemClass::Funct(){
-//    Serial.println("Funct()") ;
-//}
