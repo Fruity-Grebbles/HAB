@@ -3,13 +3,15 @@
 #include "GPS.h"
 #include <Adafruit_GPS.h>
 #include <WString.h>
+#define MOTOR_TRIGGER_ALTITUDE 250
 
 const int chipSelect = 4;
-myGPS test(11, 12);
+myGPS module(11, 12);
+bool motor_flag = false;
 
 // Interrupt is called once a millisecond, looks for any new GPS data, and stores it
 SIGNAL(TIMER0_COMPA_vect) {
-  char c = test.GPS->read();
+  char c = module.GPS->read();
 }
 
 
@@ -26,11 +28,24 @@ void setup() {
 
 void loop() {
   String dataString = "";
-  Serial.println(test.getGpsData());
+  Serial.println(module.getGpsData());
   File dataFile = SD.open("datalog.txt", FILE_WRITE);
 
   if (dataFile) {
     dataFile.println(dataString);
+
+    //Motor handling logic
+    if (module.GPS->altitude > MOTOR_TRIGGER_ALTITUDE) {
+      if (!motor_flag) {
+        motor_flag = true;
+        dataFile.println("Dishes opened");
+      }
+    } else {
+      if(motor_flag) {
+        dataFile.println("Dishes closed");
+      }
+    }
+
     dataFile.close();
   }
   else {
