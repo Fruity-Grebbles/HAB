@@ -1,33 +1,31 @@
-#include <Adafruit_GPS.h>
+// modified on July, 2nd by Sadik franco Erisen
 
-class myGPS {
-  private:
-    Adafruit_GPS* GPS;
-  public:
-    myGPS(int gps_tx, int gps_rx);
-    String getGpsData();
-    void handler();
-};
+#include <Adafruit_GPS.h>
+#include <WString.h>
+#include "./GPS.h"
+#include <stdio.h>
+
+using namespace std;
 
 myGPS::myGPS(int gps_tx, int gps_rx) {
   SoftwareSerial mySerial(gps_tx, gps_rx); //The Adalogger 32u4 has no available hardware serial pins, so we use SoftwareSerial
+
   GPS = new Adafruit_GPS(&mySerial);
   GPS->begin(4800);
   // Set the update rate
+
   GPS->sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);   // 1 Hz update rate
   OCR0A = 0xAF;
   TIMSK0 |= _BV(OCIE0A);
-  // Interrupt is called once a millisecond, looks for any new GPS data, and stores it
-  //attatchInterrupt(TIMER0_COMPA_vect, handler);
 }
-
+//
 String myGPS::getGpsData() {
   if (!GPS->parse(GPS->lastNMEA() )  ) {
     Serial.println("No connection");
     return "0,0,0,0,0,0,0,0,0,0,0,0";
   }
   String str = "";
-
+  //
   str += GPS->hour;
   str += ":";
   str += GPS->minute;
@@ -57,7 +55,4 @@ String myGPS::getGpsData() {
   str += ",";
   str += (int)GPS->satellites;
   return str;
-}
-static void myGPS::handler() {
-  char c = GPS->read();
 }
