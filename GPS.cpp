@@ -17,9 +17,6 @@ myGPS::myGPS(int gps_tx, int gps_rx) {
   GPS->sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);   // 1 Hz update rate
   OCR0A = 0xAF;
   TIMSK0 |= _BV(OCIE0A);
-
-  // Interrupt is called once a millisecond, looks for any new GPS data, and stores it
-  //attatchInterrupt(TIMER0_COMPA_vect, handler);
 }
 //
 String myGPS::getGpsData() {
@@ -58,7 +55,4 @@ String myGPS::getGpsData() {
   str += ",";
   str += (int)GPS->satellites;
   return str;
-}
-static void myGPS::handler() {
-  char c = GPS->read();
 }
