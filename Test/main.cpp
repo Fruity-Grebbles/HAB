@@ -38,23 +38,42 @@ void writeFile(){
   ofstream filew;
   filew.open("dataset.txt");
 
-  for (float initial_altitude = 000001; initial_altitude < 100000 ; initial_altitude++){
+  // This small simulation checked and written with Prof. Paul Griffo
 
+  for (int initial_altitude = 0; initial_altitude < 1000 ; initial_altitude++){
 
-    float renewal_altitude = initial_altitude + rand() % 9 - 3;
-    float delta_altitude = renewal_altitude - initial_altitude;
-    bool motor_trigger = true;
+    int target_altitude = 600;
+    int altidude_second = initial_altitude + 1;
+    int delta_altitude = altidude_second - initial_altitude;
 
-    if(delta_altitude >= 000001 && motor_trigger == true  ){
-      filew << initial_altitude << "\t" << renewal_altitude << " \t "<< delta_altitude << "\t " <<" : Flag : Opened" <<endl;
+    if(delta_altitude > 0 &&  initial_altitude > target_altitude ){
+      int initial_altitude  = altidude_second ;
+      filew << initial_altitude << "\t" << altidude_second << " \t "<< delta_altitude << "\t " <<" : Flag : Opened" <<endl;
     }else
     {
-      filew << initial_altitude << "\t" << renewal_altitude << " \t "<< delta_altitude << "\t " <<" : Flag : Closed" <<endl;
+
+      filew << initial_altitude << "\t" << altidude_second << " \t "<< delta_altitude << "\t " <<" : Flag : Closed" <<endl;
     }
 
-
-
   };
+
+for(int initial_altitude = 1000; initial_altitude > 0 ; initial_altitude--){
+
+  int target_altitude = 600;
+  int altidude_second = initial_altitude + 1;
+  int delta_altitude =  initial_altitude - altidude_second;
+
+  if(delta_altitude > 0 &&  initial_altitude > target_altitude ){
+    filew << initial_altitude << "\t" << altidude_second << " \t "<< delta_altitude << "\t " <<" : Flag : Opened" <<endl;
+  }else
+  {
+
+    filew << initial_altitude << "\t" << altidude_second << " \t "<< delta_altitude << "\t " <<" : Flag : Closed" <<endl;
+  }
+};
+
+
+
   filew.close();
 
 }
