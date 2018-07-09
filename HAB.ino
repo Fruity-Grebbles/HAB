@@ -11,6 +11,8 @@
 const int chipSelect = 4;
 bool motor_flag = false;
 
+char filename[15];
+
 SoftwareSerial mySerial(11, 12);
 Adafruit_GPS GPS(&mySerial);
 
@@ -20,14 +22,13 @@ void setup() {
   Serial.begin(115200);
   Serial.print("Initializing SD card...");
 
-  pinMode(chipselect, OUTPUT);
+  pinMode(chipSelect, OUTPUT);
   if (!SD.begin(chipSelect)) {
     Serial.println("Card failed, or not present");
     return;
   }
   Serial.println("card initialized.");
 
-  char filename[15];
   strcpy(filename, "GPSLOG00.TXT");
   for (uint8_t i = 0; i < 100; i++) {
     filename[6] = '0' + i / 10;
@@ -37,15 +38,7 @@ void setup() {
       break;
     }
   }
-
-  logfile = SD.open(filename, FILE_WRITE);
-  if ( ! logfile ) {
-    Serial.print("Couldnt create ");
-    Serial.println(filename);
-  }
-  Serial.print("Writing to ");
-  Serial.println(filename);
-
+  
   GPS.begin(9600);
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ); // 1Hz update rate
@@ -70,8 +63,10 @@ SIGNAL(TIMER0_COMPA_vect) {
 }
 
 void loop() {
-  String dataString = "Hello World";
-  //Serial.println(module.getGpsData());
+  logfile = SD.open(filename, FILE_WRITE);
+  Serial.println(getGpsData());
+  logfile.println(getGpsData());
+  logfile.close();
 }
 
 String getGpsData() {
@@ -108,5 +103,6 @@ String getGpsData() {
   str += GPS.angle;
   str += ",";
   str += (int)GPS.satellites;
+  Serial.println("Log");
   return str;
 }
