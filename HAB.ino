@@ -14,7 +14,7 @@ bool motor_flag = false;
 
 char filename[15];
 
-SoftwareSerial mySerial(11, 10);
+SoftwareSerial mySerial(10, 11);
 Adafruit_GPS GPS(&mySerial);
 
 File logfile;
@@ -40,12 +40,12 @@ void setup() {
       break;
     }
   }
-  
+
   GPS.begin(4800); //GPS communicates at 4800bps, per the datasheet
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ); // 1Hz update rate
   GPS.sendCommand(PGCMD_NOANTENNA); // Turn off updates on antenna status
-  
+
   // enable interrupt
   OCR0A = 0xAF;
   TIMSK0 |= _BV(OCIE0A);
@@ -57,21 +57,47 @@ void setup() {
 SIGNAL(TIMER0_COMPA_vect) {
   char c = GPS.read();
   // if you want to debug, this is a good time to do it!
-  #ifdef UDR0
-        if (c) UDR0 = c;  
-      // writing direct to UDR0 is much much faster than Serial.print 
-      // but only one character can be written at a time. 
-  #endif
+#ifdef UDR0
+  if (c) UDR0 = c;
+  // writing direct to UDR0 is much much faster than Serial.print
+  // but only one character can be written at a time.
+#endif
 }
 
 void loop() {
   logfile = SD.open(filename, FILE_WRITE);
-  Serial.println(getGpsData());
-  logfile.println(getGpsData());
+  Serial.println(getGpsData() + "," + getAnalogData());
+  logfile.println(getGpsData() + "," + getAnalogData());
   logfile.close();
 }
 
+String getAnalogData() {
+  String str = "";
+  float temp0 =  getTemp(analogRead(A1), 3.3);
+  float temp1 =  getTemp(analogRead(A2), 3.3);
+  float temp2 =  getTemp(analogRead(A3), 3.3);
 
+  float tempF0 =  getTempF(temp0);
+  float tempF1 =  getTempF(temp1);
+  float tempF2 =  getTempF(temp2);
+  float pressure = getPressure(analogRead(A0));
+
+  str += temp0;
+  str += ",";
+  str += tempF0;
+  str += ",";
+  str += temp1;
+  str += ",";
+  str += tempF1;
+  str += ",";
+  str += temp2;
+  str += ",";
+  str += tempF2;
+  str += ",";
+  str += pressure;
+
+  return str;
+}
 
 String getGpsData() {
   if (!GPS.parse(GPS.lastNMEA() )  ) {
@@ -107,6 +133,5 @@ String getGpsData() {
   str += GPS.angle;
   str += ",";
   str += (int)GPS.satellites;
-  Serial.println("Log");
   return str;
 }
