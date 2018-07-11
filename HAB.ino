@@ -5,6 +5,7 @@
 #include <SD.h>
 #include <SoftwareSerial.h>
 #include <Adafruit_GPS.h>
+#include "StemHab.h"
 
 #define MOTOR_TRIGGER_ALTITUDE 250
 
