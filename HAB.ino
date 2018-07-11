@@ -13,7 +13,7 @@ bool motor_flag = false;
 
 char filename[15];
 
-SoftwareSerial mySerial(11, 12);
+SoftwareSerial mySerial(11, 10);
 Adafruit_GPS GPS(&mySerial);
 
 File logfile;
@@ -39,7 +39,7 @@ void setup() {
     }
   }
   
-  GPS.begin(9600);
+  GPS.begin(4800); //GPS communicates at 4800bps, per the datasheet
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ); // 1Hz update rate
   GPS.sendCommand(PGCMD_NOANTENNA); // Turn off updates on antenna status
@@ -68,6 +68,8 @@ void loop() {
   logfile.println(getGpsData());
   logfile.close();
 }
+
+
 
 String getGpsData() {
   if (!GPS.parse(GPS.lastNMEA() )  ) {
