@@ -29,6 +29,7 @@ void setup() {
   }
   Serial.println("card initialized.");
 
+  //The following prevents clobbering old log files
   strcpy(filename, "GPSLOG00.TXT");
   for (uint8_t i = 0; i < 100; i++) {
     filename[6] = '0' + i / 10;
