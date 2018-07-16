@@ -11,7 +11,7 @@
 // This value is from the dataSheet
 #define BCOEFFICIENT 3348
 // the value of the 'other' resistor
-#define SERIESRESISTOR 1020
+#define SERIESRESISTOR 1000
 
 // Return the temperature from Analog pin
 float getTemp( float rawTemp, float Vin ) {
