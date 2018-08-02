@@ -66,21 +66,15 @@ SIGNAL(TIMER0_COMPA_vect) {
 
 void loop() {
   logfile = SD.open(filename, FILE_WRITE);
-  Serial.println(getGpsData() + "," + getAnalogData());
-  logfile.println(getGpsData() + "," + getAnalogData());
+  Serial.println(getGpsData() + "," + getSensorData());
+  logfile.println(getGpsData() + "," + getSensorData());
   logfile.close();
 }
 
-String getAnalogData() {
+String getSensorData() {
   String str = "";
-  float temp0 =  getTemp(analogRead(A1), 3.3);
-  float temp1 =  getTemp(analogRead(A2), 3.3);
-  float temp2 =  getTemp(analogRead(A3), 3.3);
 
-  float tempF0 =  getTempF(temp0);
-  float tempF1 =  getTempF(temp1);
-  float tempF2 =  getTempF(temp2);
-  float pressure = getPressure(analogRead(A0));
+  //digital sensor handling goes here
 
   str += temp0;
   str += ",";
