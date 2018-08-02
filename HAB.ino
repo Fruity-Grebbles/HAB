@@ -20,6 +20,7 @@ Adafruit_GPS GPS(&mySerial);
 File logfile;
 
 void setup() {
+  Wire.begin(); // joint i2c bus to communicate with pressure sensor
   Serial.begin(115200);
   Serial.print("Initializing SD card...");
 
@@ -69,28 +70,6 @@ void loop() {
   Serial.println(getGpsData() + "," + getSensorData());
   logfile.println(getGpsData() + "," + getSensorData());
   logfile.close();
-}
-
-String getSensorData() {
-  String str = "";
-
-  //digital sensor handling goes here
-
-  str += temp0;
-  str += ",";
-  str += tempF0;
-  str += ",";
-  str += temp1;
-  str += ",";
-  str += tempF1;
-  str += ",";
-  str += temp2;
-  str += ",";
-  str += tempF2;
-  str += ",";
-  str += pressure;
-
-  return str;
 }
 
 String getGpsData() {
