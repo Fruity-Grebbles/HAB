@@ -7,21 +7,35 @@
 #include <Adafruit_GPS.h>
 #include "StemHab.h"
 
-#define MOTOR_TRIGGER_ALTITUDE 250
+const int MOTOR_TRIGGER_ALTITUDE = 46;
+
+void SDwrite();
+void openDoor();
+void closeDoor();
 
 const int chipSelect = 4;
 bool motor_flag = false;
 
-char filename[15];
+SoftwareSerial mySerial(10, 9);
+int motor_one_p1 = A4;
+int motor_one_p2 = 12;
+int motor_two_p1 = A5;
+int motor_two_p2 = 11;
 
-SoftwareSerial mySerial(10, 11);
-Adafruit_GPS GPS(&mySerial);
+String singleLine = "";
 
 File logfile;
+String fileName = "GPSLOG";
+bool flag = true;
+bool done = false;
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(9600);
   Serial.print("Initializing SD card...");
+  while (!Serial) {
+    ;
+  }
+
 
   pinMode(chipSelect, OUTPUT);
   if (!SD.begin(chipSelect)) {
@@ -30,108 +44,142 @@ void setup() {
   }
   Serial.println("card initialized.");
 
-  //The following prevents clobbering old log files
-  strcpy(filename, "GPSLOG00.TXT");
-  for (uint8_t i = 0; i < 100; i++) {
-    filename[6] = '0' + i / 10;
-    filename[7] = '0' + i % 10;
-    // create if does not exist, do not open existing, write, sync after write
-    if (! SD.exists(filename)) {
+  for (uint8_t i = 0; i < 1000; i++) {
+    if (!SD.exists(fileName + i + ".csv")) {
+      fileName = fileName + i + ".csv";
       break;
     }
   }
 
-  GPS.begin(4800); //GPS communicates at 4800bps, per the datasheet
-  GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
-  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ); // 1Hz update rate
-  GPS.sendCommand(PGCMD_NOANTENNA); // Turn off updates on antenna status
-
-  // enable interrupt
-  OCR0A = 0xAF;
-  TIMSK0 |= _BV(OCIE0A);
-
+  SDwrite("Type,Time,Latitude,Longitude,Quality,Number Of Satellites,Horizontal Dilution of Precision (HDOP),Altitude,Height of geoid above WGS84 ellipsoid,DGPS reference station id,Checksum,Temp 1 (A1), Temp 1 (A1 RAW), Temp 2 (A2), Temp 2 (A2 RAW),Door Status");
+  mySerial.begin(4800);
   Serial.println("Ready!");
 }
 
-// Interrupt is called once a millisecond, looks for any new GPS data, and stores it
-SIGNAL(TIMER0_COMPA_vect) {
-  char c = GPS.read();
-  // if you want to debug, this is a good time to do it!
-#ifdef UDR0
-  if (c) UDR0 = c;
-  // writing direct to UDR0 is much much faster than Serial.print
-  // but only one character can be written at a time.
-#endif
-}
+struct singleLineParsed {
+  String full;
+  String type;
+  String time;
+  String lat;
+  String lng;
+  String quality;
+  String numOfSatellites;
+  String HDOP;
+  String altitude;
+  String WGS84_ellipsoid;
+  String DGPS_reference;
+  String checkSum;
+};
 
-void loop() {
-  logfile = SD.open(filename, FILE_WRITE);
-  Serial.println(getGpsData() + "," + getAnalogData());
-  logfile.println(getGpsData() + "," + getAnalogData());
+void SDwrite(String x) {
+  Serial.println(x);
+  logfile = SD.open(fileName, FILE_WRITE);
+  logfile.println(x);
   logfile.close();
 }
 
-String getAnalogData() {
-  String str = "";
-  float temp0 =  getTemp(analogRead(A1), 3.3);
-  float temp1 =  getTemp(analogRead(A2), 3.3);
-  float temp2 =  getTemp(analogRead(A3), 3.3);
-
-  float tempF0 =  getTempF(temp0);
-  float tempF1 =  getTempF(temp1);
-  float tempF2 =  getTempF(temp2);
-  float pressure = getPressure(analogRead(A0));
-
-  str += temp0;
-  str += ",";
-  str += tempF0;
-  str += ",";
-  str += temp1;
-  str += ",";
-  str += tempF1;
-  str += ",";
-  str += temp2;
-  str += ",";
-  str += tempF2;
-  str += ",";
-  str += pressure;
-
-  return str;
+void openDoor() {
+  digitalWrite(A4, HIGH);
+  digitalWrite(12, LOW);
+  digitalWrite(A5, HIGH);
+  digitalWrite(11, LOW);
 }
 
-String getGpsData() {
-  if (!GPS.parse(GPS.lastNMEA() )  ) {
-    Serial.println("No connection");
-    return "0,0,0,0,0,0,0,0,0,0,0,0";
+void closeDoor() {
+  digitalWrite(motor_one_p1, LOW);
+  digitalWrite(motor_one_p2, HIGH);
+  digitalWrite(motor_two_p1, LOW);
+  digitalWrite(motor_two_p2, HIGH);
+}
+
+void loop() {
+  //  Serial.println(getTemp(analogRead(A1), 5));
+  //  Serial.println(getTemp(analogRead(A2), 5));
+  openDoor();
+  if (mySerial.available()) {
+    char x = (char) mySerial.read();
+    if (x == '\n') {
+      singleLineParsed newLine;
+      if (singleLine.substring(0, 10).indexOf("$GPGGA") != -1) {
+        for (int i = 0; i < 20; i++) {
+          if (i == 0) {
+            newLine.full = singleLine;
+          }
+          int split = singleLine.indexOf(",");
+          String y = singleLine.substring(0, split);
+          singleLine = singleLine.substring(split + 1, singleLine.length());
+          switch (i) {
+            case 0:
+              newLine.type =  y;
+              break;
+            case 1:
+              newLine.time = y;
+              break;
+            case 2:
+              newLine.lat = y;
+              break;
+            case 3:
+              break;
+            case 4:
+              newLine.lng = y;
+              break;
+            case 5:
+              break;
+            case 6:
+              newLine.quality = y;
+              break;
+            case 7:
+              newLine.numOfSatellites = y;
+              break;
+            case 8:
+              newLine.HDOP = y;
+              break;
+            case 9:
+              newLine.altitude = y;
+              break;
+            case 10:
+              break;
+            case 11:
+              newLine.WGS84_ellipsoid = y;
+              break;
+            case 12:
+              break;
+            case 13:
+              break;
+            case 14:
+              newLine.DGPS_reference = singleLine.substring(0, 4);
+              newLine.checkSum = singleLine.substring(4, singleLine.length() - 1);
+              break;
+          }
+
+          if (singleLine.length() == 0)
+            break;
+        }
+        if ((newLine.lng == "") != 1) {
+
+          if (newLine.altitude.toInt() > MOTOR_TRIGGER_ALTITUDE) {
+            SDwrite(
+              newLine.type + "," + newLine.time + "," + newLine.lat + "," + newLine.lng + "," + newLine.quality + "," + newLine.numOfSatellites + "," + newLine.HDOP + "," + newLine.altitude + "," + newLine.WGS84_ellipsoid + "," + newLine.DGPS_reference + "," + newLine.checkSum + "," + getTemp(analogRead(A1), 5) + "," + analogRead(A1) + "," + getTemp(analogRead(A2), 5) + "," + analogRead(A2) + "," + "1");
+            //            Serial.println(getTemp(analogRead(A0), 5));
+            //            Serial.println(getTemp(analogRead(A1), 5));
+            //            Serial.println(getTemp(analogRead(A2), 5));
+//            openDoor();
+          }
+          if (newLine.altitude.toInt() < MOTOR_TRIGGER_ALTITUDE) {
+            SDwrite(
+              newLine.type + "," + newLine.time + "," + newLine.lat + "," + newLine.lng + "," + newLine.quality + "," + newLine.numOfSatellites + "," + newLine.HDOP + "," + newLine.altitude + "," + newLine.WGS84_ellipsoid + "," + newLine.DGPS_reference + "," + newLine.checkSum + "," + getTemp(analogRead(A1), 5) + "," + analogRead(A1) + "," + getTemp(analogRead(A2), 5) + "," + analogRead(A2) + "," + "0"
+            );
+            //            Serial.println(getTemp(analogRead(A0), 5));
+            //            Serial.println(getTemp(analogRead(A1), 5));
+            //            Serial.println(getTemp(analogRead(A2), 5));
+//            closeDoor();
+          }
+          //          Serial.println(analogRead(A0));
+        }
+      }
+      singleLine = "";
+    } else {
+      singleLine += x;
+    }
   }
-  String str = "";
-  str += GPS.hour;
-  str += ":";
-  str += GPS.minute;
-  str += ":";
-  str += GPS.seconds;
-  str += ",";
-  str += GPS.month;
-  str += "/";
-  str += GPS.day + "/";
-  str += GPS.year + ",";
-  str += (int) GPS.fix + ",";
-  str += (int) GPS.fixquality + ",";
-  str += GPS.latitude;
-  str += GPS.lat + ",";
-  str += GPS.longitude;
-  str += GPS.lon;
-  str += ",";
-  str += GPS.latitudeDegrees;
-  str += ",";
-  str += GPS.longitudeDegrees;
-  str += ",";
-  str += GPS.altitude;
-  str += ",";
-  str += GPS.speed;
-  str += ",";
-  str += GPS.angle;
-  str += ",";
-  str += (int)GPS.satellites;
-  return str;
 }
